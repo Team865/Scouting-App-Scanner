@@ -8,7 +8,7 @@ import javafx.geometry.Insets
 import javafx.geometry.Pos
 import javafx.scene.Scene
 import javafx.scene.control.*
-import javafx.scene.control.Alert.AlertType
+import javafx.scene.image.Image
 import javafx.scene.input.KeyCode
 import javafx.stage.FileChooser
 import javafx.stage.Stage
@@ -40,16 +40,22 @@ class ScannerScreen {
     fun alert(t: String, s: String) {
         val dialog = Dialog<ButtonType>()
         val pane = dialog.dialogPane
+        dialog.initOwner(stage)
         pane.buttonTypes.addAll(ButtonType.OK)
-        dialog.dialogPane.content = label(s)
+        pane.contentText = s
         dialog.title = t
         dialog.showAndWait()
     }
 
     fun confirm(s: String): Boolean {
-        val alert = Alert(AlertType.CONFIRMATION, s, ButtonType.YES, ButtonType.NO)
-        alert.showAndWait()
-        return alert.result == ButtonType.YES
+        val dialog = Dialog<ButtonType>()
+        val pane = dialog.dialogPane
+        dialog.initOwner(stage)
+        dialog.title = "Confirmation"
+        pane.buttonTypes.addAll(ButtonType.YES, ButtonType.NO)
+        pane.contentText = s
+        dialog.showAndWait()
+        return dialog.result == ButtonType.YES
     }
 
     fun save() {
@@ -80,7 +86,7 @@ class ScannerScreen {
 
     fun updateTitle() {
         val path = savePath
-        stage.title = if (path == null) "Scouting App Scanner" else "Scouting App Scanner | $path"
+        stage.title = if (path == null) "WARP7 Scouting Scan Tool" else "WARP7 Scouting Scan Tool | $path"
     }
 
     fun updateCameras() {
@@ -93,18 +99,26 @@ class ScannerScreen {
     }
 
     fun openFile() {
-        if (textEntries.isNotEmpty() && !confirm("Override all current entries?")) return
+        if (textEntries.isNotEmpty() && !confirm("Override all current entries?")) {
+            return
+        }
+
         val chooser = FileChooser()
+
         chooser.title = "Save As"
         chooser.initialDirectory = File(System.getProperty("user.home"), "Desktop")
         val path = chooser.showOpenDialog(stage)?.toPath() ?: return
+
         savePath = path
         saveState.text = "Loading"
         updateTitle()
         textEntries.clear()
         unsortedEntries.clear()
+
         executor.submit {
+
             val data = Files.readAllLines(path)
+
             var i = 0
             val items = ArrayList<V5Entry>()
             val entries = ArrayList<String>()
@@ -117,7 +131,9 @@ class ScannerScreen {
                 } catch (e: Exception) {
                 }
             }
+
             entriesLock.withLock { textEntries.addAll(entries) }
+
             Platform.runLater {
                 unsortedEntries.addAll(items)
                 updateSorted(sortByMatch.isSelected)
@@ -137,12 +153,16 @@ class ScannerScreen {
     }
 
     fun closeSaveFile() {
-        savePath = null
-        textEntries.clear()
-        unsortedEntries.clear()
-        tv.items.clear()
-        updateTitle()
-        saveState.text = "Save File Closed"
+        if (savePath != null) {
+            savePath = null
+            textEntries.clear()
+            unsortedEntries.clear()
+            tv.items.clear()
+            updateTitle()
+            saveState.text = "Save File Closed"
+        } else {
+            saveState.text = "No Save File To Close"
+        }
     }
 
     fun showComment() {
@@ -175,6 +195,7 @@ class ScannerScreen {
 
     fun showWarnings() {
         val map = HashMap<String, MutableList<Board>>()
+
         unsortedEntries.forEach {
             val matchNum = it.match.split("_").last()
             if (matchNum in map) {
@@ -183,12 +204,16 @@ class ScannerScreen {
                 map[matchNum] = mutableListOf(it.board)
             }
         }
+
         val order = map.keys.sortedWith(comparator)
         val w = StringBuilder()
         val v = Board.values().toMutableList()
+
         v.remove(Board.RX)
         v.remove(Board.BX)
+
         val missing = mutableListOf<Board>()
+
         order.forEach { key ->
             missing.clear()
             val md = map[key]!!
@@ -199,6 +224,7 @@ class ScannerScreen {
                 w.append(missing.last()).append("\n")
             }
         }
+
         alert("Warnings", w.toString())
     }
 
@@ -369,8 +395,9 @@ class ScannerScreen {
     }
 
     init {
-        stage.title = "Scouting App Scanner"
+        stage.title = "WARP7 Scouting Scan Tool"
         stage.scene = scene
+        stage.icons.add(Image(ScannerScreen::class.java.getResourceAsStream("/icon.png")))
         scene.onKeyPressed = EventHandler {
             if (it.code == KeyCode.K) {
                 streaming.isSelected = !streaming.isSelected
