@@ -1,9 +1,10 @@
 package ca.warp7.desktop.qrscanner
 
+import ca.warp7.android.scouting.entry.Entry
 import javafx.scene.control.TableCell
 import kb.core.fx.label
 
-class MatchCell : TableCell<V5Entry, String>() {
+class MatchCell : TableCell<Entry, String>() {
     override fun updateItem(item: String?, empty: Boolean) {
         super.updateItem(item, empty)
         if (item == null || empty) {

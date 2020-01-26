@@ -1,5 +1,8 @@
 package ca.warp7.desktop.qrscanner
 
+import ca.warp7.android.scouting.entry.Board
+import ca.warp7.android.scouting.entry.DecodedEntry
+import ca.warp7.android.scouting.entry.Entry
 import ca.warp7.desktop.qrscanner.camera.FXCamera
 import javafx.application.Platform
 import javafx.beans.property.SimpleStringProperty
@@ -32,7 +35,7 @@ class ScannerScreen {
 
     val executor: ExecutorService = Executors.newSingleThreadExecutor()
     val entriesLock = ReentrantLock()
-    val unsortedEntries: MutableList<V5Entry> = ArrayList()
+    val unsortedEntries: MutableList<Entry> = ArrayList()
     val textEntries: MutableList<String> = ArrayList()
     val comparator = NaturalOrderComparator()
 
@@ -120,7 +123,7 @@ class ScannerScreen {
             val data = Files.readAllLines(path)
 
             var i = 0
-            val items = ArrayList<V5Entry>()
+            val items = ArrayList<Entry>()
             val entries = ArrayList<String>()
             data.forEach {
                 try {
@@ -256,35 +259,35 @@ class ScannerScreen {
 
     val saveState = label("No Save File")
 
-    val tv = tableView<V5Entry> {
+    val tv = tableView<Entry> {
         vgrow()
-        columns.add(tableColumn<V5Entry, String> {
+        columns.add(tableColumn<Entry, String> {
             text = "Match"
             isSortable = false
             prefWidth = 45.0
             setCellValueFactory { SimpleStringProperty(it.value.match.split("_").last()) }
             setCellFactory { MatchCell() }
         })
-        columns.add(tableColumn<V5Entry, String> {
+        columns.add(tableColumn<Entry, String> {
             text = "Scout"
             isSortable = false
             prefWidth = 75.0
             setCellValueFactory { SimpleStringProperty(it.value.scout) }
         })
-        columns.add(tableColumn<V5Entry, String> {
+        columns.add(tableColumn<Entry, String> {
             text = "Board"
             isSortable = false
             prefWidth = 45.0
             setCellValueFactory { SimpleStringProperty(it.value.board.name) }
         })
-        columns.add(tableColumn<V5Entry, String> {
+        columns.add(tableColumn<Entry, String> {
             text = "Team"
             prefWidth = 45.0
             setCellValueFactory { SimpleStringProperty(it.value.team) }
             setCellFactory { TeamCell() }
             isSortable = false
         })
-        columns.add(tableColumn<V5Entry, String> {
+        columns.add(tableColumn<Entry, String> {
             isSortable = false
             text = "Comments"
             setCellValueFactory { SimpleStringProperty(it.value.comments) }
