@@ -89,7 +89,8 @@ class ScannerScreen {
 
     fun updateTitle() {
         val path = savePath
-        stage.title = if (path == null) "WARP7 Scouting Scan Tool" else "WARP7 Scouting Scan Tool | $path"
+        val prefix = if (path == null) "" else "$path | "
+        stage.title = prefix + "WARP7 Scouting Scan Tool 2020.2.0"
     }
 
     fun updateCameras() {
@@ -191,7 +192,7 @@ class ScannerScreen {
             it.value.sortWith(comparator)
             val size = it.value.size
             val sizeStr = if (size == 1) "1 total match" else "$size total matches"
-            "${it.key}: $sizeStr. Last: ${it.value.last()}"
+            "${it.key}: $sizeStr. Last: M${it.value.last()}"
         }
         alert("Scout Stats", s)
     }
@@ -210,17 +211,13 @@ class ScannerScreen {
 
         val order = map.keys.sortedWith(comparator)
         val w = StringBuilder()
-        val v = Board.values().toMutableList()
-
-        v.remove(Board.RX)
-        v.remove(Board.BX)
 
         val missing = mutableListOf<Board>()
 
         order.forEach { key ->
             missing.clear()
             val md = map[key]!!
-            v.forEach { board -> if (!md.contains(board)) missing.add(board) }
+            Board.values().forEach { board -> if (!md.contains(board)) missing.add(board) }
             if (missing.isNotEmpty()) {
                 w.append("Match ").append(key).append(": Missing ")
                 for (i in 0 until missing.size - 1) w.append(missing[i]).append(", ")
@@ -265,7 +262,9 @@ class ScannerScreen {
             text = "Match"
             isSortable = false
             prefWidth = 45.0
-            setCellValueFactory { SimpleStringProperty(it.value.match.split("_").last()) }
+            setCellValueFactory {
+                SimpleStringProperty("M" + it.value.match.split("_").last())
+            }
             setCellFactory { MatchCell() }
         })
         columns.add(tableColumn<Entry, String> {
@@ -398,7 +397,7 @@ class ScannerScreen {
     }
 
     init {
-        stage.title = "WARP7 Scouting Scan Tool"
+        updateTitle()
         stage.scene = scene
         stage.icons.add(Image(ScannerScreen::class.java.getResourceAsStream("/icon.png")))
         scene.onKeyPressed = EventHandler {
